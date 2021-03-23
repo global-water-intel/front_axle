@@ -79,12 +79,13 @@ module FrontAxle
       param = params[:q][f_name.to_sym]
       @options = []
       @picked = []
-      results.facets[f_name]['terms'].each do |t|
+
+      results.aggregations[f_name]['buckets'].each do |t|
         item = []
-        item << (t['term'].present? ? t['term'].to_s.humanize : 'Not specified')
-        item[0] += " (#{t['count']})"
-        item << t['term']
-        @picked << t['term'] if param.try :member?, t['term']
+        item << (t['key'].present? ? t['key'].to_s.humanize : 'Not specified')
+        item[0] += " (#{t['doc_count']})"
+        item << t['key']
+        @picked << t['key'] if param.try :member?, t['key']
 
         # out += content_tag :div, item, class: 'facet-line'
         @options << item
@@ -95,12 +96,12 @@ module FrontAxle
     end
 
     def slidey_facet_for(facet, params)
-      data = @results.response.facets[facet[:name]]
+      data = @results.response.aggregations[facet[:name]]
 
       return '' if data.blank?
 
-      if data['terms']
-        data = data['terms'].sort { |a, b| a['term'] <=> b['term'] }
+      if data['buckets']
+        data = data['buckets'].sort { |a, b| a['key'] <=> b['key'] }
       else
         data = data['entries'].sort { |a, b| a['key'] <=> b['key'] }
       end
@@ -115,7 +116,7 @@ module FrontAxle
         to = 'Max'
       end
 
-      width = facet[:width] || '4em'
+      width = facet[:width] || '8em'
 
       inputs = %w(min max).map do |l|
         name = l + facet[:name]
@@ -157,12 +158,12 @@ module FrontAxle
 
     # TODO: not actually doing anything to constrain search results
     def date_facet_for(facet, params)
-      data = @results.response.facets[facet[:name]]
+      data = @results.response.aggregations[facet[:name]]
 
       return if data.length == 0
 
-      if data['terms']
-        data = data['terms'].sort { |a, b| a['term'] <=> b['term'] }
+      if data['buckets']
+        data = data['buckets'].sort { |a, b| a['key'] <=> b['key'] }
       else
         data = data['entries'].sort { |a, b| a['time'] <=> b['time'] }
       end
@@ -184,7 +185,7 @@ module FrontAxle
       tag = facet[:name]
       js_data = data.to_json.html_safe
       granularity = 1
-      interval = facet[:interval] || 0
+      interval = facet[:interval].to_i || 0
 
       func_body = "facetSlider(\"#{tag}\",#{js_data},#{granularity}, #{interval})"
 

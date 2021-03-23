@@ -110,7 +110,7 @@ module FrontAxle
           klass::STRING_FACETS.each do |facet|
             t = Array(facet)[0]
             # size = Array(facet)[1] || 1000
-            f[t.to_sym] = { terms: { field: t.to_sym, size: 999 } }
+            f[t.to_sym] = { terms: { field: t.to_sym, size: 0 } }
           end
         end
 
@@ -155,7 +155,7 @@ module FrontAxle
           end
         end
 
-        __elasticsearch__.search(query: finalized_q, aggs: aggs, facets: f, sort: s, filter: filters).per_page(per_page).page(page)
+        __elasticsearch__.search(query: finalized_q, aggs: aggs.merge(f), sort: s, filter: filters).per_page(per_page).page(page)
       end
 
       def potentially_nested_filters_for(t, filters, params)
