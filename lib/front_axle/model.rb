@@ -88,20 +88,18 @@ module FrontAxle
           end
         end
 
-        filters = { :bool => { must: [] } }
-
         # TODO: no maps in use for now
         if params['bounding_box'].present?
-          filters[:bool][:must] << { geo_bounding_box: { location: params['bounding_box'] }}
+          q[:bool][:must] << { geo_bounding_box: { location: params['bounding_box'] }}
         elsif params['location_lat'].present? && params['distance'].present?
-          filters[:bool][:must] << { geo_distance: { distance: params['distance'],
+          q[:bool][:must] << { geo_distance: { distance: params['distance'],
                                                        distance_type: 'plane',
                                                        location: [params['location_lng'], params['location_lat']] } }
         end
 
         if klass.const_defined? 'STRING_FACETS'
           klass::STRING_FACETS.each do |t|
-            potentially_nested_filters_for(t, filters, params)
+            potentially_nested_filters_for(t, q, params)
           end
         end
         # FACETS
@@ -132,6 +130,7 @@ module FrontAxle
           finalized_q = q
         end
 
+        filters = {}
         if filter_block.present?
           filters = filter_block.call(filters)
         end
@@ -155,7 +154,9 @@ module FrontAxle
           end
         end
 
-        __elasticsearch__.search(query: finalized_q, aggs: aggs.merge(f), sort: s, filter: filters).per_page(per_page).page(page)
+        h = { query: finalized_q, aggs: aggs.merge(f), sort: s }
+        h[:filter] = filters if filters.present?
+        __elasticsearch__.search(h).per_page(per_page).page(page)
       end
 
       def potentially_nested_filters_for(t, filters, params)
