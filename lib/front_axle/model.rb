@@ -154,8 +154,9 @@ module FrontAxle
           end
         end
 
-        h = { query: finalized_q, aggs: aggs.merge(f), sort: s }
-        h[:filter] = filters if filters.present?
+        filters ||= {}
+        h = { query: { bool: { must: finalized_q, filter: filters } }, aggs: aggs.merge(f), sort: s }
+
         __elasticsearch__.search(h).per_page(per_page).page(page)
       end
 
@@ -167,9 +168,9 @@ module FrontAxle
           return
         end
 
-        nested_bool = { :or => { filters: [] } }
+        nested_bool = { bool: { should: [] } }
         params[t.to_s].each do |k, v|
-          nested_bool[:or][:filters] << { terms: { k.to_sym => v } }
+          nested_bool[:bool][:should] << { bool: { filter: [{ terms: { k.to_sym => v } }] } }
         end
 
         filters[:bool][:must] << nested_bool
