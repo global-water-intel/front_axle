@@ -108,7 +108,7 @@ module FrontAxle
           klass::STRING_FACETS.each do |facet|
             t = Array(facet)[0]
             # size = Array(facet)[1] || 1000
-            f[t.to_sym] = { terms: { field: t.to_sym, size: 0 } }
+            f[t.to_sym] = { terms: { field: t.to_sym, size: 999_999 } }
           end
         end
 
