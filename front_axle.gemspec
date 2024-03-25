@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile"]
   s.test_files = Dir["test/**/*"]
 
-  s.add_dependency "rails", "= 6.1.7.7"
+  s.add_dependency "rails", "= 6.0.6.1"
   s.add_dependency "elasticsearch-model"
   s.add_dependency "elasticsearch-rails"
 
