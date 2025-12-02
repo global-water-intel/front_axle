@@ -157,7 +157,22 @@ module FrontAxle
         filters ||= {}
         h = { query: { bool: { must: finalized_q, filter: filters } }, aggs: aggs.merge(f), sort: s }
 
+        h = deep_compact(h)
         __elasticsearch__.search(h).per_page(per_page).page(page)
+      end
+
+      def deep_compact(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(k, v), result|
+            compacted = deep_compact(v)
+            result[k] = compacted unless compacted.nil? || compacted.respond_to?(:empty?) && compacted.empty?
+          end
+        when Array
+          obj.map { |v| deep_compact(v) }.compact.reject { |v| v.respond_to?(:empty?) && v.empty? }
+        else
+          obj
+        end
       end
 
       def potentially_nested_filters_for(t, filters, params)
